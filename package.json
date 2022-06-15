@@ -1,41 +1,34 @@
 {
-  "name": "minecraft-jar-extractor",
-  "version": "1.0.0",
-  "description": "Extract structured data from the minecraft jar",
-  "main": "protocol_extractor.js",
-  "scripts": {
-    "test": "npm run lint",
-    "lint": "standard",
-    "fix": "standard --fix"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/PrismarineJS/minecraft-jar-extractor.git"
-  },
-  "dependencies": {
-    "async": "~2.6.3",
-    "deep-equal": "^2.0.3",
-    "es6-promisify": "^7.0.0",
-    "extract-zip": "^2.0.1",
-    "fernflower": "^1.1.0",
-    "fs-extra": "^10.0.0",
-    "minecraft-data": "^3.0.0",
-    "minecraft-wrap": "^1.2.3",
-    "mkdirp": "^0.5.1",
-    "prismarine-loottable": "^1.0.0"
-  },
-  "keywords": [
-    "minecraft",
-    "jar",
-    "extractor"
-  ],
-  "author": "Romain Beaumont <romain.rom1@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/PrismarineJS/minecraft-jar-extractor/issues"
-  },
-  "homepage": "https://github.com/PrismarineJS/minecraft-jar-extractor#readme",
-  "devDependencies": {
-    "standard": "^17.0.0"
-  }
+    "name": "minecraft-jar-extractor",
+    "version": "1.0.0",
+    "description": "Extract structured data from the minecraft jar",
+    "main": "protocol_extractor.js",
+    "scripts": {},
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Eejit43/minecraft-jar-extractor.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/Eejit43/minecraft-jar-extractor/issues"
+    },
+    "homepage": "https://github.com/Eejit43/minecraft-jar-extractor#readme",
+    "dependencies": {
+        "async": "^3.2.4",
+        "deep-equal": "^2.0.5",
+        "es6-promisify": "^7.0.0",
+        "extract-zip": "^2.0.1",
+        "fernflower": "^1.1.0",
+        "fs-extra": "^10.1.0",
+        "minecraft-data": "^3.4.0",
+        "minecraft-wrap": "^1.4.0",
+        "mkdirp": "^1.0.4",
+        "prismarine-loottable": "^1.0.0"
+    },
+    "devDependencies": {
+        "eslint": "^8.17.0",
+        "eslint-plugin-jsdoc": "^39.3.2"
+    }
 }

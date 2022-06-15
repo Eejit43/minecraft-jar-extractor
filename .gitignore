@@ -1,8 +1,8 @@
-node_modules
-package-lock.json
-versions
-.vscode
-minecraft_extracted_data
-node_modules
-out
+.DS_Store
+.vscode/settings.json
+
+node_modules/
+
+output
 temp
+versions
