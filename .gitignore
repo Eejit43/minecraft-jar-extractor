@@ -3,6 +3,9 @@
 
 node_modules/
 
-output
-temp
+data
+version-data
 versions
+images
+lang
+decompiled

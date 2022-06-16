@@ -1,52 +1,70 @@
-const fs = require('fs');
-const async = require('async');
+import { waterfall } from 'async';
+import { readFile, readFileSync, writeFile } from 'fs';
+import { resolve } from 'path';
 
-if (process.argv.length !== 3) {
-    console.log('Usage: node protocol_extractor.js <decompiledFilesDir>');
+if (process.argv.length < 3) {
+    console.log('Must provide a version!');
     process.exit(1);
 }
 
-const decompiledFilesDir = process.argv[2];
+const minecraftVersion = process.argv[2];
+const decompiledFilesDir = resolve(`./decompiled/${minecraftVersion}/decompiled`);
 
-getProtocol();
+waterfall([readPacketsIds, dataToCleanLines, linesToProtocol], write);
 
-function getProtocol() {
-    async.waterfall([readPacketsIds, dataToCleanLines, linesToProtocol], write);
-}
-
+/**
+ * Writes the protocol to a file
+ * @param {string} err the error message
+ * @param {object} protocol the protocol object
+ * @returns {void}
+ */
 function write(err, protocol) {
     if (err) return console.log('problem ' + err);
-    fs.writeFile('protocol.json', JSON.stringify(reorder(['handshaking', 'status', 'login', 'play'], protocol), null, 2));
+    writeFile('protocol.json', JSON.stringify(reorder(['handshaking', 'status', 'login', 'play'], protocol), null, 2));
 }
 
-function readPacketsIds(cb) {
-    readClass('el', cb);
+/**
+ * Reads the packets ids from the protocol file
+ * @param {Function} callback the callback function
+ */
+function readPacketsIds(callback) {
+    readClass('el', callback);
 }
 
-function dataToCleanLines(data, cb) {
-    let c = true;
+/**
+ * Cleans the lines from the protocol file
+ * @param {string} data the data to clean
+ * @param {Function} callback the callback function
+ */
+function dataToCleanLines(data, callback) {
+    let clean = true;
     const lines = data.split('\n');
-    cb(
+    callback(
         null,
         lines
-            .map((s) => {
-                return s.trim();
+            .map((line) => {
+                return line.trim();
             })
-            .filter((s) => {
-                return s.indexOf('import') === -1 && s.indexOf('public') === -1 && s !== '}' && s !== '{' && s !== '},' && s !== '';
+            .filter((line) => {
+                return line.indexOf('import') === -1 && line.indexOf('public') === -1 && line !== '}' && line !== '{' && line !== '},' && line !== '';
             })
-            .filter((s) => {
-                if (s === '};') c = false;
-                return c;
+            .filter((line) => {
+                if (line === '};') clean = false;
+                return clean;
             })
     );
 }
 
-function linesToProtocol(cleanLines, cb) {
+/**
+ * Converts the lines to a protocol object
+ * @param {Array} cleanLines the lines to process
+ * @param {Function} callback the callback function
+ */
+function linesToProtocol(cleanLines, callback) {
     let currentState;
     let currentToClientId;
     let currentToServerId;
-    cb(
+    callback(
         null,
         cleanLines.reduce((protocol, line) => {
             let results;
@@ -71,6 +89,12 @@ function linesToProtocol(cleanLines, cb) {
     );
 }
 
+/**
+ * Reorders the object according to the given order
+ * @param {Array} order the desired order
+ * @param {object} obj the object to reorder
+ * @returns {object} the reordered object
+ */
 function reorder(order, obj) {
     return order.reduce((result, prop) => {
         result[prop] = obj[prop];
@@ -78,6 +102,11 @@ function reorder(order, obj) {
     }, {});
 }
 
+/**
+ * Converts an id to a hex string
+ * @param {number} id the
+ * @returns {string} the hex string
+ */
 function idToHexString(id) {
     let hexString = id.toString(16);
     if (hexString.length === 1) {
@@ -93,21 +122,40 @@ const states = {
     2: 'login',
 };
 
-function readClass(className, cb) {
-    fs.readFile(decompiledFilesDir + '/' + className + '.java', 'utf8', cb);
+/**
+ * Reads java class into the given callback
+ * @param {string} className the class to read
+ * @param {Function} callback the callback function
+ */
+function readClass(className, callback) {
+    readFile(decompiledFilesDir + '/' + className + '.java', 'utf8', callback);
 }
 
+/**
+ * Reads java class and returns the data
+ * @param {string} className the class to read
+ * @returns {string} the class data
+ */
 function readClassSync(className) {
-    return fs.readFileSync(decompiledFilesDir + '/' + className + '.java', 'utf8');
+    return readFileSync(decompiledFilesDir + '/' + className + '.java', 'utf8');
 }
 
+/**
+ * Gets the fields of the given class
+ * @param {string} className the class name
+ * @returns {Array} the fields of the class
+ */
 function getFields(className) {
     if (className.indexOf('.') !== -1) return ['error'];
     const data = readClassSync(className);
     return processPacketDefinition(data);
 }
 
-// get the whole reading method instead and map the method call to types
+/**
+ * Processes the packet definition
+ * @param {string} data the data to process
+ * @returns {Array} the processed data
+ */
 function processPacketDefinition(data) {
     return data
         .split('\n')
@@ -129,6 +177,11 @@ function processPacketDefinition(data) {
         });
 }
 
+/**
+ * Transforms the type (to lowercase and `unsigned`-->`u`)
+ * @param {string} type the type to transform
+ * @returns {string} the transformed type
+ */
 function transformType(type) {
     type = type.toLowerCase();
     return type.replace('unsigned', 'u');

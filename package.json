@@ -1,7 +1,8 @@
 {
     "name": "minecraft-jar-extractor",
     "version": "1.0.0",
-    "description": "Extract structured data from the minecraft jar",
+    "type": "module",
+    "description": "Extract structured data from Minecraft JAR files",
     "main": "protocol_extractor.js",
     "scripts": {},
     "repository": {
@@ -24,8 +25,7 @@
         "fs-extra": "^10.1.0",
         "minecraft-data": "^3.4.0",
         "minecraft-wrap": "^1.4.0",
-        "mkdirp": "^1.0.4",
-        "prismarine-loottable": "^1.0.0"
+        "mkdirp": "^1.0.4"
     },
     "devDependencies": {
         "eslint": "^8.17.0",

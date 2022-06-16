@@ -1,23 +1,27 @@
-const { downloadClient } = require('minecraft-wrap');
-const extract = require('extract-zip');
-const fs = require('fs-extra');
+import extract from 'extract-zip';
+import fsExtra from 'fs-extra';
+import minecraftWrap from 'minecraft-wrap';
 
-function getMinecraftFiles(minecraftVersion, temporaryDir, cb) {
-    const jarPath = temporaryDir + '/' + minecraftVersion + '.jar';
-    const unzippedFilesDir = temporaryDir + '/' + minecraftVersion;
-    fs.mkdirpSync(unzippedFilesDir);
+const { mkdirpSync } = fsExtra;
+const { downloadClient } = minecraftWrap;
+
+/**
+ * Downloads minecraft files
+ * @param {number} minecraftVersion the version of minecraft to download
+ * @param {string} versionDataDir the temporary directory to download to
+ * @param {Function} callback the callback function
+ */
+export function getMinecraftFiles(minecraftVersion, versionDataDir, callback) {
+    const jarPath = versionDataDir + '/' + minecraftVersion + '.jar';
+    const unzippedFilesDir = versionDataDir + '/' + minecraftVersion;
+    mkdirpSync(unzippedFilesDir);
     downloadClient(minecraftVersion, jarPath, async (err) => {
-        if (err) {
-            cb(err);
-            return;
-        }
+        if (err) return callback(err);
         try {
             await extract(jarPath, { dir: unzippedFilesDir });
-            cb(null, unzippedFilesDir);
+            callback(null, unzippedFilesDir);
         } catch (err) {
-            cb(err);
+            callback(err);
         }
     });
 }
-
-module.exports = getMinecraftFiles;

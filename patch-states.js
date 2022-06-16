@@ -1,17 +1,17 @@
-const fs = require('fs');
-const path = require('path');
-const extractDataFromMC = require('./extract-data-from-minecraft');
+import { promises, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
+import { extractDataFromMC } from './extract-data-from-minecraft.js';
 
 /**
- * Adds/fixes state information to blocks.json
- * @param {string} inFile path to the blocks.json
+ * Handles the patching of the block loot tables
+ * @param {string} version the version to patch
+ * @param {string} outPath the path to the output directory
  */
-
 async function handle(version, outPath) {
-    const blockFile = path.resolve(outPath);
-    const blocks = require(blockFile);
+    const blockFile = resolve(outPath);
+    const blocks = await import(blockFile);
     await extractDataFromMC(version);
-    const data = require('./minecraft-extracted-data/minecraft-generated-blocks.json');
+    const data = await import('./minecraft-extracted-data/minecraft-generated-blocks.json');
 
     if (!data) {
         console.log('No api for ' + version);
@@ -55,8 +55,8 @@ async function handle(version, outPath) {
         block.drops = block.drops.filter((x) => x !== null);
     }
 
-    fs.writeFileSync(blockFile, JSON.stringify(blocks, null, 2));
-    await fs.promises.rm(path.join('minecraft-extracted-data', 'minecraft-generated-blocks.json'));
+    writeFileSync(blockFile, JSON.stringify(blocks, null, 2));
+    await promises.rm(join('minecraft-extracted-data', 'minecraft-generated-blocks.json'));
 }
 
 if (!process.argv[2] || !process.argv[3]) {

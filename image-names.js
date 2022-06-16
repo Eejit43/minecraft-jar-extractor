@@ -1,219 +1,40 @@
-'use strict';
+import fsExtra from 'fs-extra';
+import { resolve } from 'path';
+import minecraftData from 'minecraft-data';
+import { getMinecraftFiles } from './get-minecraft-files.js';
+import { blockMapping, itemMapping } from './mapping.js';
 
-const fs = require('fs-extra');
-const path = require('path');
-const getMinecraftFiles = require('./get-minecraft-files');
+const { copySync, mkdirpSync, readdirSync, readFileSync, writeFileSync } = fsExtra;
 
-if (process.argv.length !== 5) {
-    console.log('Usage: node image-names.js <version1,version2,...> <output_dir> <temporary_dir>');
+if (process.argv.length < 3) {
+    console.log('Must provide a version!');
     process.exit(1);
 }
 
 const minecraftVersions = process.argv[2].split(',');
-const outputDir = path.resolve(process.argv[3]);
-const temporaryDir = path.resolve(process.argv[4]);
+const outputDir = resolve('images');
+const temporaryDir = resolve('version-data');
 
 minecraftVersions.forEach((minecraftVersion) => {
     extract(minecraftVersion, outputDir + '/' + minecraftVersion, temporaryDir, (err) => {
         if (err) return console.log(err.stack);
-        console.log('done ' + minecraftVersion + '!');
+        console.log(`Successfully generated images for ${minecraftVersion} to ${outputDir}/${minecraftVersion}`);
     });
 });
 
-/* eslint-disable camelcase */
-
-// doesn't support 1.7.10 : completely different organization (no block state, no model)
-const itemMapping = {
-    '1.8.8': {
-        wooden_door: 'oak_door',
-        fish: 'pufferfish',
-        cooked_fish: 'cooked_salmon',
-        dye: 'dye_black',
-        potion: 'bottle_drinkable',
-        skull: 'skull_char',
-    },
-    1.9: {
-        wooden_door: 'oak_door',
-        fish: 'pufferfish',
-        cooked_fish: 'cooked_salmon',
-        dye: 'dye_black',
-        potion: 'bottle_drinkable',
-        skull: 'skull_char',
-        boat: 'oak_boat',
-        splash_potion: 'bottle_splash',
-        lingering_potion: 'bottle_lingering',
-    },
-    '1.10': {
-        wooden_door: 'oak_door',
-        fish: 'pufferfish',
-        cooked_fish: 'cooked_salmon',
-        dye: 'dye_black',
-        potion: 'bottle_drinkable',
-        skull: 'skull_char',
-        boat: 'oak_boat',
-        splash_potion: 'bottle_splash',
-        lingering_potion: 'bottle_lingering',
-    },
-    '1.11.2': {
-        wooden_door: 'oak_door',
-        fish: 'pufferfish',
-        cooked_fish: 'cooked_salmon',
-        dye: 'dye_black',
-        potion: 'bottle_drinkable',
-        skull: 'skull_char',
-        boat: 'oak_boat',
-        totem_of_undying: 'totem',
-        splash_potion: 'bottle_splash',
-        lingering_potion: 'bottle_lingering',
-    },
-    1.12: {
-        wooden_door: 'oak_door',
-        fish: 'pufferfish',
-        cooked_fish: 'cooked_salmon',
-        dye: 'dye_black',
-        potion: 'bottle_drinkable',
-        skull: 'skull_char',
-        boat: 'oak_boat',
-        totem_of_undying: 'totem',
-        splash_potion: 'bottle_splash',
-        lingering_potion: 'bottle_lingering',
-    },
-    1.13: {},
-};
-
-// TODO: read the decompiled code (automatically) to generate this
-const blockMapping = {
-    '1.8.8': {
-        log: 'oak_log',
-        planks: 'oak_planks',
-        sapling: 'oak_sapling',
-        leaves: 'oak_leaves',
-        tallgrass: 'tall_grass',
-        deadbush: 'dead_bush',
-        wool: 'white_wool',
-        piston_extension: 'piston',
-        yellow_flower: 'dandelion',
-        red_flower: 'poppy',
-        double_stone_slab: 'stone_double_slab',
-        stained_glass: 'white_stained_glass',
-        double_wooden_slab: 'oak_double_slab',
-        wooden_slab: 'oak_slab',
-        stained_hardened_clay: 'white_stained_hardened_clay',
-        stained_glass_pane: 'white_stained_glass_pane',
-        log2: 'acacia_log',
-        leaves2: 'acacia_leaves',
-        carpet: 'white_carpet',
-        double_plant: 'sunflower',
-        double_stone_slab2: 'red_sandstone_double_slab',
-        stone_slab2: 'red_sandstone_slab',
-    },
-    1.9: {
-        log: 'oak_log',
-        planks: 'oak_planks',
-        sapling: 'oak_sapling',
-        leaves: 'oak_leaves',
-        tallgrass: 'tall_grass',
-        deadbush: 'dead_bush',
-        wool: 'white_wool',
-        piston_extension: 'piston',
-        yellow_flower: 'dandelion',
-        red_flower: 'poppy',
-        double_stone_slab: 'stone_double_slab',
-        stained_glass: 'white_stained_glass',
-        double_wooden_slab: 'oak_double_slab',
-        wooden_slab: 'oak_slab',
-        stained_hardened_clay: 'white_stained_hardened_clay',
-        stained_glass_pane: 'white_stained_glass_pane',
-        log2: 'acacia_log',
-        leaves2: 'acacia_leaves',
-        carpet: 'white_carpet',
-        double_plant: 'sunflower',
-        double_stone_slab2: 'red_sandstone_double_slab',
-        stone_slab2: 'red_sandstone_slab',
-    },
-    '1.10': {
-        log: 'oak_log',
-        planks: 'oak_planks',
-        sapling: 'oak_sapling',
-        leaves: 'oak_leaves',
-        tallgrass: 'tall_grass',
-        deadbush: 'dead_bush',
-        wool: 'white_wool',
-        piston_extension: 'piston',
-        yellow_flower: 'dandelion',
-        red_flower: 'poppy',
-        double_stone_slab: 'stone_double_slab',
-        stained_glass: 'white_stained_glass',
-        double_wooden_slab: 'oak_double_slab',
-        wooden_slab: 'oak_slab',
-        stained_hardened_clay: 'white_stained_hardened_clay',
-        stained_glass_pane: 'white_stained_glass_pane',
-        log2: 'acacia_log',
-        leaves2: 'acacia_leaves',
-        carpet: 'white_carpet',
-        double_plant: 'sunflower',
-        double_stone_slab2: 'red_sandstone_double_slab',
-        stone_slab2: 'red_sandstone_slab',
-    },
-    '1.11.2': {
-        log: 'oak_log',
-        planks: 'oak_planks',
-        sapling: 'oak_sapling',
-        leaves: 'oak_leaves',
-        tallgrass: 'tall_grass',
-        deadbush: 'dead_bush',
-        wool: 'white_wool',
-        piston_extension: 'piston',
-        yellow_flower: 'dandelion',
-        red_flower: 'poppy',
-        double_stone_slab: 'stone_double_slab',
-        stained_glass: 'white_stained_glass',
-        double_wooden_slab: 'oak_double_slab',
-        wooden_slab: 'oak_slab',
-        stained_hardened_clay: 'white_stained_hardened_clay',
-        stained_glass_pane: 'white_stained_glass_pane',
-        log2: 'acacia_log',
-        leaves2: 'acacia_leaves',
-        carpet: 'white_carpet',
-        double_plant: 'sunflower',
-        double_stone_slab2: 'red_sandstone_double_slab',
-        stone_slab2: 'red_sandstone_slab',
-    },
-    1.12: {
-        log: 'oak_log',
-        planks: 'oak_planks',
-        sapling: 'oak_sapling',
-        leaves: 'oak_leaves',
-        tallgrass: 'tall_grass',
-        deadbush: 'dead_bush',
-        wool: 'white_wool',
-        piston_extension: 'piston',
-        yellow_flower: 'dandelion',
-        red_flower: 'poppy',
-        double_stone_slab: 'stone_double_slab',
-        stained_glass: 'white_stained_glass',
-        double_wooden_slab: 'oak_double_slab',
-        wooden_slab: 'oak_slab',
-        stained_hardened_clay: 'white_stained_hardened_clay',
-        stained_glass_pane: 'white_stained_glass_pane',
-        log2: 'acacia_log',
-        leaves2: 'acacia_leaves',
-        carpet: 'white_carpet',
-        double_plant: 'sunflower',
-        double_stone_slab2: 'red_sandstone_double_slab',
-        stone_slab2: 'red_sandstone_slab',
-    },
-    1.13: {},
-};
-
-/* eslint-enable camelcase */
-
+/**
+ * Extracts the block state from the block states file
+ * @param {string} name the block to extract
+ * @param {string} path the path to the block states file
+ * @param {boolean} [full=false] Whether to return the full block state or just the model
+ * @returns {string} The model name
+ */
 function extractBlockState(name, path, full = false) {
     if (name === null) return null;
     else {
         try {
             name = name.replace(/minecraft:/, '');
-            const t = JSON.parse(fs.readFileSync(path + name + '.json', 'utf8'));
+            const t = JSON.parse(readFileSync(path + name + '.json', 'utf8'));
             if (full) return t;
             const firstVariant = t.variants[Object.keys(t.variants)[0]];
             return firstVariant.model || firstVariant[0].model;
@@ -223,12 +44,19 @@ function extractBlockState(name, path, full = false) {
     }
 }
 
+/**
+ * Extracts the model from the block states file
+ * @param {string} name the block to extract
+ * @param {string} path the path to the block states file
+ * @param {boolean} [full=false] Whether to return the full block state or just the model
+ * @returns {string} The model name
+ */
 function extractModel(name, path, full = false) {
     if (name === null) return null;
     else {
         try {
             name = name.replace(/^(?:block\/)?minecraft:/, '');
-            const t = JSON.parse(fs.readFileSync(path + name + '.json', 'utf8'));
+            const t = JSON.parse(readFileSync(path + name + '.json', 'utf8'));
             if (full) return t;
             if (t.textures) return t.textures[Object.keys(t.textures)[0]];
 
@@ -245,8 +73,15 @@ function extractModel(name, path, full = false) {
     }
 }
 
+/**
+ * Gets the items for the given version
+ * @param {string} unzippedFilesDir the path to the unzipped minecraft files
+ * @param {string} itemsTexturesPath the path to the items textures file
+ * @param {object} itemMapping the item mapping
+ * @param {string} version the Minecraft version
+ */
 function getItems(unzippedFilesDir, itemsTexturesPath, itemMapping, version) {
-    const mcData = require('minecraft-data')(version);
+    const mcData = minecraftData(version);
     const itemTextures = mcData.itemsArray.map((item) => {
         const model = (itemMapping !== undefined && itemMapping[item.name] ? itemMapping[item.name] : item.name).replace(/minecraft:/, '');
         const texture = extractModel('item/' + model, unzippedFilesDir + '/assets/minecraft/models/');
@@ -256,11 +91,18 @@ function getItems(unzippedFilesDir, itemsTexturesPath, itemMapping, version) {
             texture: !texture ? null : texture.replace('item/', 'items/'),
         };
     });
-    fs.writeFileSync(itemsTexturesPath, JSON.stringify(itemTextures, null, 2));
+    writeFileSync(itemsTexturesPath, JSON.stringify(itemTextures, null, 2));
 }
 
+/**
+ * Gets the blocks for the given version
+ * @param {string} unzippedFilesDir the path to the unzipped minecraft files
+ * @param {string} blocksTexturesPath the path to the blocks textures file
+ * @param {object} blockMapping the block mapping
+ * @param {string} version the Minecraft version
+ */
 function getBlocks(unzippedFilesDir, blocksTexturesPath, blockMapping, version) {
-    const mcData = require('minecraft-data')(version);
+    const mcData = minecraftData(version);
     const blockModel = mcData.blocksArray.map((block) => {
         const blockState = (blockMapping !== undefined && blockMapping[block.name] ? blockMapping[block.name] : block.name).replace(/minecraft:/, '');
         const model = extractBlockState(blockState, unzippedFilesDir + '/assets/minecraft/blockstates/');
@@ -272,11 +114,19 @@ function getBlocks(unzippedFilesDir, blocksTexturesPath, blockMapping, version) 
             texture: !texture ? null : texture.replace('block/', 'blocks/'),
         };
     });
-    fs.writeFileSync(blocksTexturesPath, JSON.stringify(blockModel, null, 2));
+    writeFileSync(blocksTexturesPath, JSON.stringify(blockModel, null, 2));
 }
 
+/**
+ * Gets the models for the given version
+ * @param {string} unzippedFilesDir the path to the unzipped minecraft files
+ * @param {string} blocksStatesPath the path to the blocks states file
+ * @param {string} blocksModelsPath the path to the blocks models file
+ * @param {object} blockMapping the block mapping
+ * @param {string} version the Minecraft version
+ */
 function getModels(unzippedFilesDir, blocksStatesPath, blocksModelsPath, blockMapping, version) {
-    const mcData = require('minecraft-data')(version);
+    const mcData = minecraftData(version);
     const blocksStates = {};
     for (const block of mcData.blocksArray) {
         const blockState = blockMapping !== undefined && blockMapping[block.name] ? blockMapping[block.name] : block.name;
@@ -284,37 +134,47 @@ function getModels(unzippedFilesDir, blocksStatesPath, blocksModelsPath, blockMa
         blocksStates[block.name] = state;
     }
     const modelsPath = unzippedFilesDir + '/assets/minecraft/models/block/';
-    const modelFiles = fs.readdirSync(modelsPath);
+    const modelFiles = readdirSync(modelsPath);
     const models = {};
     for (const name of modelFiles) {
-        const model = require(modelsPath + name);
+        const model = JSON.parse(readFileSync(modelsPath + name, 'utf-8')); // eslint-disable-line no-await-in-loop
         models[name.split('.')[0]] = model;
     }
-    fs.writeFileSync(blocksStatesPath, JSON.stringify(blocksStates, null, 2));
-    fs.writeFileSync(blocksModelsPath, JSON.stringify(models, null, 2));
+    writeFileSync(blocksStatesPath, JSON.stringify(blocksStates, null, 2));
+    writeFileSync(blocksModelsPath, JSON.stringify(models, null, 2));
 }
 
 const textureMappings = {
     block: 'blocks',
     item: 'items',
 };
+
+/**
+ * Copies the textures
+ * @param {string} unzippedFilesDir the path to the unzipped minecraft files
+ * @param {string} outputDir the path to the output directory
+ */
 function copyTextures(unzippedFilesDir, outputDir) {
     const textures = unzippedFilesDir + '/assets/minecraft/textures/';
-    for (const file of fs.readdirSync(textures)) {
+    for (const file of readdirSync(textures)) {
         const outName = textureMappings[file] ? textureMappings[file] : file;
-        fs.copySync(textures + file, outputDir + '/' + outName);
+        copySync(textures + file, outputDir + '/' + outName);
     }
 }
 
+/**
+ * Generates the texture content
+ * @param {string} outputDir the path to the output directory
+ */
 function generateTextureContent(outputDir) {
-    const blocksItems = require(outputDir + '/items_textures.json').concat(require(outputDir + '/blocks_textures.json'));
+    const blocksItems = JSON.parse(readFileSync(outputDir + '/items_textures.json', 'utf-8')).concat(JSON.parse(readFileSync(outputDir + '/blocks_textures.json', 'utf-8')));
     const arr = blocksItems.map((b) => ({
         name: b.name,
         texture:
             b.texture === null
                 ? null
                 : 'data:image/png;base64,' +
-                  fs.readFileSync(
+                  readFileSync(
                       outputDir +
                           '/' +
                           b.texture
@@ -325,19 +185,26 @@ function generateTextureContent(outputDir) {
                       'base64'
                   ),
     }));
-    fs.writeFileSync(outputDir + '/texture_content.json', JSON.stringify(arr, null, 2));
+    writeFileSync(outputDir + '/texture_content.json', JSON.stringify(arr, null, 2));
 }
 
-function extract(minecraftVersion, outputDir, temporaryDir, cb) {
+/**
+ * Extracts all textures
+ * @param {string} minecraftVersion the Minecraft version
+ * @param {string} outputDir the path to the output directory
+ * @param {string} temporaryDir the path to the temporary directory
+ * @param {Function} callback the callback function
+ */
+function extract(minecraftVersion, outputDir, temporaryDir, callback) {
     getMinecraftFiles(minecraftVersion, temporaryDir, (err, unzippedFilesDir) => {
-        if (err) return cb(err);
+        if (err) return callback(err);
 
-        fs.mkdirpSync(outputDir);
+        mkdirpSync(outputDir);
         getItems(unzippedFilesDir, outputDir + '/items_textures.json', itemMapping[minecraftVersion], minecraftVersion);
         getBlocks(unzippedFilesDir, outputDir + '/blocks_textures.json', blockMapping[minecraftVersion], minecraftVersion);
         getModels(unzippedFilesDir, outputDir + '/blocks_states.json', outputDir + '/blocks_models.json', blockMapping[minecraftVersion], minecraftVersion);
         copyTextures(unzippedFilesDir, outputDir);
         generateTextureContent(outputDir);
-        cb();
+        callback();
     });
 }

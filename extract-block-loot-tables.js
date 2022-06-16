@@ -1,8 +1,12 @@
-'use strict';
+import { existsSync, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
 
-const fs = require('fs');
-const path = require('path');
-
+/**
+ * Gets the item id from an item name
+ * @param {object} data the data to get the item id from
+ * @param {string} name the name of the item
+ * @returns {number} the item id
+ */
 function getItemId(data, name) {
     for (const prop in data) {
         const item = data[prop];
@@ -10,9 +14,19 @@ function getItemId(data, name) {
     }
 }
 
+/**
+ * Extracts the item drop ids from a loot table
+ * @param {object} itemData the item data
+ * @param {object} lootTable the loot table
+ * @returns {Array} the item drop ids
+ */
 function extractDropIds(itemData, lootTable) {
     const dropIds = [];
 
+    /**
+     * Recursively extracts the item drop ids from a loot table
+     * @param {object} object the object to extract from
+     */
     function recursiveDropSearch(object) {
         for (const prop in object) {
             const info = object[prop];
@@ -38,30 +52,30 @@ function extractDropIds(itemData, lootTable) {
  * @param {string} outPath path to folder with blocks.json & items.json
  * @param {string} inPath extracted data
  */
-function handle(outPath, inPath) {
-    const outPathResolved = path.resolve(outPath);
-    const dataFolder = path.join(inPath, 'data', 'loot_tables', 'blocks');
+async function handle(outPath, inPath) {
+    const outPathResolved = resolve(outPath);
+    const dataFolder = join(inPath, 'data', 'loot_tables', 'blocks');
 
-    const blocksFilePath = path.join(outPathResolved, 'blocks.json');
-    const itemDataPath = path.join(outPathResolved, 'items.json');
+    const blocksFilePath = join(outPathResolved, 'blocks.json');
+    const itemDataPath = join(outPathResolved, 'items.json');
 
-    const blockData = require(blocksFilePath);
-    const itemData = require(itemDataPath);
+    const blockData = await import(blocksFilePath);
+    const itemData = await import(itemDataPath);
 
     for (const prop in blockData) {
         const block = blockData[prop];
 
-        const inputPath = path.join(dataFolder, block.name + '.json');
-        if (!fs.existsSync(inputPath)) {
+        const inputPath = join(dataFolder, block.name + '.json');
+        if (!existsSync(inputPath)) {
             block.drops = [];
             continue;
         }
 
-        const lootTable = require(inputPath);
+        const lootTable = await import(inputPath); // eslint-disable-line no-await-in-loop
         block.drops = extractDropIds(itemData, lootTable);
     }
 
-    fs.writeFileSync(blocksFilePath, JSON.stringify(blockData, null, 2));
+    writeFileSync(blocksFilePath, JSON.stringify(blockData, null, 2));
 }
 
 if (!process.argv[2] || !process.argv[3]) {

@@ -1,15 +1,24 @@
-'use strict';
+import deepEqual from 'deep-equal';
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
+import { getPotentialDrops } from './prismarine-loottable.js'; // cSpell:disable-line
 
-const fs = require('fs');
-const path = require('path');
-const { getPotentialDrops } = require('prismarine-loottable');
-const deepEqual = require('deep-equal');
-
+/**
+ * Removes the `minecraft` namespace from a string
+ * @param {string} name the string to remove the namespace from
+ * @returns {string} the string without the namespace
+ */
 function removeNamespace(name) {
     if (name.startsWith('minecraft:')) name = name.substring(10);
     return name;
 }
 
+/**
+ * Extracts block loot data
+ * @param {Array} lootData the loot data
+ * @param {object} lootTable the loot table
+ * @param {string} name the name of the block
+ */
 function extractBlockTable(lootData, lootTable, name) {
     const obj = {};
     obj.block = removeNamespace(name);
@@ -17,6 +26,12 @@ function extractBlockTable(lootData, lootTable, name) {
     lootData.push(obj);
 }
 
+/**
+ * Extracts entity loot data
+ * @param {Array} lootData the loot data
+ * @param {object} lootTable the loot table
+ * @param {string} name the name of the entity
+ */
 function extractEntityTable(lootData, lootTable, name) {
     const obj = {};
     obj.entity = removeNamespace(name);
@@ -24,6 +39,10 @@ function extractEntityTable(lootData, lootTable, name) {
     lootData.push(obj);
 }
 
+/**
+ * Removes duplicates from a list of drops
+ * @param {Array} list the list to remove duplicates from
+ */
 function removeDuplicates(list) {
     for (let i = 0; i < list.length; i++) {
         for (let j = i + 1; j < list.length; j++) {
@@ -36,19 +55,24 @@ function removeDuplicates(list) {
     }
 }
 
-function extractTable(obj, lootTable) {
+/**
+ * Extracts loot tables and inserts into an object
+ * @param {object} object the object to insert drops into
+ * @param {object} lootTable the loot table
+ */
+function extractTable(object, lootTable) {
     const drops = getPotentialDrops(lootTable);
 
-    obj.drops = [];
+    object.drops = [];
     for (const drop of drops) {
         const dropInfo = {};
-        obj.drops.push(dropInfo);
+        object.drops.push(dropInfo);
 
         dropInfo.item = removeNamespace(drop.itemType);
         dropInfo.dropChance = drop.estimateDropChance();
         dropInfo.stackSizeRange = drop.getStackSizeRange();
 
-        if (obj.block !== undefined) {
+        if (object.block !== undefined) {
             dropInfo.silkTouch = drop.requiresSilkTouch() || undefined;
             dropInfo.noSilkTouch = drop.requiresNoSilkTouch() || undefined;
             dropInfo.blockAge = drop.getRequiredBlockAge() || undefined;
@@ -57,46 +81,59 @@ function extractTable(obj, lootTable) {
         }
     }
 
-    removeDuplicates(obj.drops);
+    removeDuplicates(object.drops);
 }
 
+/**
+ * Generates loot tables from a folder
+ * @param {string} inputDir the input directory
+ * @param {string} outputFile the output file
+ * @param {Function} handlerFunction the function to handle the loot table
+ * @returns {number} the number of entries processed
+ */
 function generate(inputDir, outputFile, handlerFunction) {
     const lootData = [];
 
-    const lootFiles = fs.readdirSync(inputDir);
+    const lootFiles = readdirSync(inputDir);
     for (const loot of lootFiles) {
-        const fullPath = path.join(inputDir, loot);
-        if (fs.statSync(fullPath).isDirectory()) continue;
+        const fullPath = join(inputDir, loot);
+        if (statSync(fullPath).isDirectory()) continue;
 
         const name = loot.substring(0, loot.length - 5);
-        handlerFunction(lootData, require(fullPath), name);
+        handlerFunction(lootData, JSON.parse(readFileSync(fullPath, 'utf-8')), name);
     }
 
-    fs.writeFileSync(outputFile, JSON.stringify(lootData, null, 2));
+    writeFileSync(outputFile, JSON.stringify(lootData, null, 2));
     return lootFiles.length;
 }
 
+/**
+ * Handles the loot tables
+ * @param {string} dataFolder the folder with loot tables
+ * @param {string} mcDataFolder the folder with mc data
+ * @param {string} version the Minecraft version
+ */
 function handle(dataFolder, mcDataFolder, version) {
     dataFolder += '/' + version;
 
-    const raw = path.resolve(dataFolder + '/data/loot_tables');
-    const dataPath = path.resolve(mcDataFolder + '/data/pc/' + version);
-    fs.mkdirSync(dataPath, { recursive: true });
+    const raw = resolve(dataFolder + '/loot_tables');
+    const dataPath = resolve(`${mcDataFolder}/${version}`);
+    mkdirSync(dataPath, { recursive: true });
 
     let entryCount = 0;
-    entryCount += generate(path.join(raw, 'blocks'), path.join(dataPath, 'blockLoot.json'), extractBlockTable);
-    entryCount += generate(path.join(raw, 'entities'), path.join(dataPath, 'entityLoot.json'), extractEntityTable);
+    entryCount += generate(join(raw, 'blocks'), join(dataPath, 'blockLoot.json'), extractBlockTable);
+    entryCount += generate(join(raw, 'entities'), join(dataPath, 'entityLoot.json'), extractEntityTable);
 
-    console.log(`Version ${version} finished. (${entryCount} entries processed)`);
+    console.log(`Version ${version} finished (${entryCount} entries processed)`);
 }
 
-if (process.argv.length !== 5) {
-    console.log('Usage: node extract-loot-tables.js <version1,version2,...> <extractedDataFolder> <mcDataFolder>');
+if (process.argv.length < 3) {
+    console.log('Must provide a version!');
     process.exit(1);
 }
 
 const versions = process.argv[2].split(',');
-const dataFolder = path.resolve(process.argv[3]);
-const mcDataFolder = path.resolve(process.argv[4]);
+const dataFolder = resolve('data');
+const mcDataFolder = resolve('loot-tables');
 
 for (const version of versions) handle(dataFolder, mcDataFolder, version);
