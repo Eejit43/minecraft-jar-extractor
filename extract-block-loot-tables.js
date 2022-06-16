@@ -48,7 +48,7 @@ function extractDropIds(itemData, lootTable) {
     return dropIds;
 }
 /**
- * adds drops to a blocks.json
+ * Adds drops to a blocks.json
  * @param {string} outPath path to folder with blocks.json & items.json
  * @param {string} inPath extracted data
  */
