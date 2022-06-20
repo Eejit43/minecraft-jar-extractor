@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rename } from 'fs';
+import { existsSync, mkdirSync, renameSync } from 'fs';
 import { join, resolve } from 'path';
 import { copyFolderRecursiveSync } from './functions.js';
 import { getMinecraftFiles } from './get-minecraft-files.js';
@@ -15,7 +15,7 @@ export default async function (minecraftVersion) {
 
     if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
     copyFolderRecursiveSync(join(versionDataDir, minecraftVersion, 'data', 'minecraft'), outputDir);
-    rename(join(outputDir, 'minecraft'), join(outputDir, minecraftVersion));
+    renameSync(join(outputDir, 'minecraft'), join(outputDir, minecraftVersion));
 
     return console.log(`Extracted data folder for ${minecraftVersion} to ${outputDir}/${minecraftVersion}`);
 }

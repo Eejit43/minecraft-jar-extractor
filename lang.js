@@ -9,16 +9,19 @@ if (process.argv.length < 3) {
     process.exit(1);
 }
 
-const minecraftVersions = process.argv[2].split(',');
-const outputDir = resolve('lang');
-const temporaryDir = resolve('version-data');
+const versions = process.argv[2].split(',');
 
-minecraftVersions.forEach((minecraftVersion) => {
-    extract(minecraftVersion, outputDir + '/' + minecraftVersion, temporaryDir, (err) => {
-        if (err) return console.log(err.stack);
+versions.forEach(async (version) => {
+    const outputDir = resolve(`lang/${version}`);
+    const versionDataDir = resolve(`version-data/${version}`);
 
-        console.log(`Successfully extracted lang files for ${minecraftVersion} to ${outputDir}/${minecraftVersion}`);
-    });
+    if (!existsSync(versionDataDir)) await getMinecraftFiles(version, resolve('version-data'));
+
+    mkdirpSync(outputDir);
+    copyLang(versionDataDir, outputDir);
+    parseLang(outputDir);
+
+    console.log(`Successfully extracted lang files for ${version} to ${outputDir}/${version}`);
 });
 
 /**
@@ -54,21 +57,4 @@ function parseLang(outputDir) {
         });
 
     writeFileSync(outputDir + '/en_us.json', JSON.stringify(lang, null, 2));
-}
-
-/**
- * Extracts all language files
- * @param {string} minecraftVersion the Minecraft version
- * @param {string} outputDir the path to the output directory
- * @param {string} temporaryDir the path to the temporary directory
- * @param {Function} callback the callback function
- */
-function extract(minecraftVersion, outputDir, temporaryDir, callback) {
-    getMinecraftFiles(minecraftVersion, temporaryDir, (err, unzippedFilesDir) => {
-        if (err) return callback(err);
-        mkdirpSync(outputDir);
-        copyLang(unzippedFilesDir, outputDir);
-        parseLang(outputDir);
-        callback();
-    });
 }
