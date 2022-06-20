@@ -21,40 +21,20 @@ ex: `node lang.js 1.18,1.19`
 ## Protocol extractor
 
 ```text
-$ node download-decompile.js <version|version1,version2,...>
-```
-
-Then:
-
-```text
 $ node protocol-extractor.js <version|version1,version2,...>
 ```
 
-ex:
-
-`$ node download-decompile.js 1.18,1.19`
-
-`$ node protocol-extractor.js 1.18,1.19`
+ex: `$ node protocol-extractor.js 1.18,1.19`
 
 ## Block loot table extractor
 
 **_Only works in 1.14+_**
 
 ```text
-$ node extract-data-folder.js <version|version1,version2,...>
-```
-
-Then:
-
-```text
 $ node extract-loot-tables.js <version|version1,version2,...>
 ```
 
-ex:
-
-`$ node extract-data-folder.js 1.18,1.19`
-
-`$ node extract-loot-tables.js 1.18,1.19`
+ex: `$ node extract-loot-tables.js 1.18,1.19`
 
 ## Add defaultState to a blocks.json
 

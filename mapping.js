@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* cSpell:disable */
 
 // doesn't support 1.7.10 : completely different organization (no block state, no model)
 export const itemMapping = {

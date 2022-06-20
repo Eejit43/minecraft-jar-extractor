@@ -1,7 +1,8 @@
 import deepEqual from 'deep-equal';
-import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
-import { getPotentialDrops } from './prismarine-loottable.js'; // cSpell:disable-line
+import extractDataFolder from './util/extract-data-folder.js';
+import { getPotentialDrops } from './util/prismarine-loottable.js'; // cSpell:disable-line
 
 /**
  * Removes the `minecraft` namespace from a string
@@ -108,21 +109,21 @@ function generate(inputDir, outputFile, handlerFunction) {
 }
 
 /**
- * Handles the loot tables
+ * Handles the loot generation
  * @param {string} dataFolder the folder with loot tables
  * @param {string} mcDataFolder the folder with mc data
  * @param {string} version the Minecraft version
  */
-function handle(dataFolder, mcDataFolder, version) {
-    dataFolder += '/' + version;
+async function handle(dataFolder, mcDataFolder, version) {
+    const rawPath = resolve(`${dataFolder}/${version}/loot_tables`);
 
-    const raw = resolve(dataFolder + '/loot_tables');
+    if (!existsSync(rawPath)) await extractDataFolder(version);
     const dataPath = resolve(`${mcDataFolder}/${version}`);
     mkdirSync(dataPath, { recursive: true });
 
     let entryCount = 0;
-    entryCount += generate(join(raw, 'blocks'), join(dataPath, 'blockLoot.json'), extractBlockTable);
-    entryCount += generate(join(raw, 'entities'), join(dataPath, 'entityLoot.json'), extractEntityTable);
+    entryCount += generate(join(rawPath, 'blocks'), join(dataPath, 'blockLoot.json'), extractBlockTable);
+    entryCount += generate(join(rawPath, 'entities'), join(dataPath, 'entityLoot.json'), extractEntityTable);
 
     console.log(`Version ${version} finished (${entryCount} entries processed)`);
 }

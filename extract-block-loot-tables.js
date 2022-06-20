@@ -49,12 +49,12 @@ function extractDropIds(itemData, lootTable) {
 }
 /**
  * Adds drops to a blocks.json
- * @param {string} outPath path to folder with blocks.json & items.json
- * @param {string} inPath extracted data
+ * @param {string} jsonPath path to folder with blocks.json & items.json
+ * @param {string} version Minecraft version
  */
-async function handle(outPath, inPath) {
-    const outPathResolved = resolve(outPath);
-    const dataFolder = join(inPath, 'data', 'loot_tables', 'blocks');
+async function handle(jsonPath, version) {
+    const outPathResolved = resolve(jsonPath);
+    const dataFolder = join('data', version, 'loot_tables', 'blocks');
 
     const blocksFilePath = join(outPathResolved, 'blocks.json');
     const itemDataPath = join(outPathResolved, 'items.json');
@@ -78,8 +78,8 @@ async function handle(outPath, inPath) {
     writeFileSync(blocksFilePath, JSON.stringify(blockData, null, 2));
 }
 
-if (!process.argv[2] || !process.argv[3]) {
-    console.log('Usage: extract-block-loot-tables.js <jsonPath> <dataPath>');
+if (process.argv.length < 3) {
+    console.log('Must provide a version and JSON path!');
     process.exit(1);
 }
 

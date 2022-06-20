@@ -1,6 +1,6 @@
 import fsExtra from 'fs-extra';
 import { resolve } from 'path';
-import { getMinecraftFiles } from './get-minecraft-files.js';
+import { getMinecraftFiles } from './util/get-minecraft-files.js';
 
 const { copySync, existsSync, mkdirpSync, readFileSync, writeFileSync } = fsExtra;
 

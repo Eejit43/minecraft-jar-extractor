@@ -1,6 +1,7 @@
 import { waterfall } from 'async';
-import { readFile, readFileSync, writeFile } from 'fs';
+import { existsSync, readFile, readFileSync, writeFile } from 'fs';
 import { resolve } from 'path';
+import downloadDecompile from './util/download-decompile.js';
 
 if (process.argv.length < 3) {
     console.log('Must provide a version!');
@@ -9,6 +10,8 @@ if (process.argv.length < 3) {
 
 const minecraftVersion = process.argv[2];
 const decompiledFilesDir = resolve(`./decompiled/${minecraftVersion}/decompiled`);
+
+if (!existsSync(decompiledFilesDir)) await downloadDecompile(minecraftVersion);
 
 waterfall([readPacketsIds, dataToCleanLines, linesToProtocol], write);
 

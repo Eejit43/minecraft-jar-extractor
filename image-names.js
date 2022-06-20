@@ -1,25 +1,32 @@
-import fsExtra from 'fs-extra';
-import { resolve } from 'path';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import minecraftData from 'minecraft-data';
-import { getMinecraftFiles } from './get-minecraft-files.js';
+import { resolve } from 'path';
 import { blockMapping, itemMapping } from './mapping.js';
-
-const { copySync, mkdirpSync, readdirSync, readFileSync, writeFileSync } = fsExtra;
+import { copyFolderRecursiveSync } from './util/functions.js';
+import { getMinecraftFiles } from './util/get-minecraft-files.js';
 
 if (process.argv.length < 3) {
     console.log('Must provide a version!');
     process.exit(1);
 }
 
-const minecraftVersions = process.argv[2].split(',');
-const outputDir = resolve('images');
-const temporaryDir = resolve('version-data');
+const versions = process.argv[2].split(',');
 
-minecraftVersions.forEach((minecraftVersion) => {
-    extract(minecraftVersion, outputDir + '/' + minecraftVersion, temporaryDir, (err) => {
-        if (err) return console.log(err.stack);
-        console.log(`Successfully generated images for ${minecraftVersion} to ${outputDir}/${minecraftVersion}`);
-    });
+versions.forEach(async (version) => {
+    const outputDir = resolve(`images/${version}`);
+    const versionDataDir = resolve(`version-data/${version}`);
+
+    if (!existsSync(versionDataDir)) await getMinecraftFiles(version, resolve('version-data'));
+
+    mkdirSync(outputDir, { recursive: true });
+
+    getItems(versionDataDir, outputDir + '/items_textures.json', itemMapping[version], version);
+    getBlocks(versionDataDir, outputDir + '/blocks_textures.json', blockMapping[version], version);
+    getModels(versionDataDir, outputDir + '/blocks_states.json', outputDir + '/blocks_models.json', blockMapping[version], version);
+    copyTextures(versionDataDir, outputDir);
+    generateTextureContent(outputDir);
+
+    console.log(`Successfully generated images for ${version} to ${outputDir}`);
 });
 
 /**
@@ -87,8 +94,8 @@ function getItems(unzippedFilesDir, itemsTexturesPath, itemMapping, version) {
         const texture = extractModel('item/' + model, unzippedFilesDir + '/assets/minecraft/models/');
         return {
             name: item.name,
-            model: !model ? null : model.replace('item/', 'items/'),
-            texture: !texture ? null : texture.replace('item/', 'items/'),
+            model: model || null,
+            texture: texture || null,
         };
     });
     writeFileSync(itemsTexturesPath, JSON.stringify(itemTextures, null, 2));
@@ -110,8 +117,8 @@ function getBlocks(unzippedFilesDir, blocksTexturesPath, blockMapping, version) 
         return {
             name: block.name,
             blockState,
-            model: !model ? null : model.replace('block/', 'blocks/'),
-            texture: !texture ? null : texture.replace('block/', 'blocks/'),
+            model: model || null,
+            texture: texture || null,
         };
     });
     writeFileSync(blocksTexturesPath, JSON.stringify(blockModel, null, 2));
@@ -144,11 +151,6 @@ function getModels(unzippedFilesDir, blocksStatesPath, blocksModelsPath, blockMa
     writeFileSync(blocksModelsPath, JSON.stringify(models, null, 2));
 }
 
-const textureMappings = {
-    block: 'blocks',
-    item: 'items',
-};
-
 /**
  * Copies the textures
  * @param {string} unzippedFilesDir the path to the unzipped minecraft files
@@ -157,8 +159,7 @@ const textureMappings = {
 function copyTextures(unzippedFilesDir, outputDir) {
     const textures = unzippedFilesDir + '/assets/minecraft/textures/';
     for (const file of readdirSync(textures)) {
-        const outName = textureMappings[file] ? textureMappings[file] : file;
-        copySync(textures + file, outputDir + '/' + outName);
+        copyFolderRecursiveSync(textures + file, outputDir);
     }
 }
 
@@ -167,44 +168,10 @@ function copyTextures(unzippedFilesDir, outputDir) {
  * @param {string} outputDir the path to the output directory
  */
 function generateTextureContent(outputDir) {
-    const blocksItems = JSON.parse(readFileSync(outputDir + '/items_textures.json', 'utf-8')).concat(JSON.parse(readFileSync(outputDir + '/blocks_textures.json', 'utf-8')));
-    const arr = blocksItems.map((b) => ({
-        name: b.name,
-        texture:
-            b.texture === null
-                ? null
-                : 'data:image/png;base64,' +
-                  readFileSync(
-                      outputDir +
-                          '/' +
-                          b.texture
-                              .replace('item/', 'items/')
-                              .replace('block/', 'blocks/')
-                              .replace(/minecraft:/, '') +
-                          '.png',
-                      'base64'
-                  ),
+    const allBlocksAndItems = JSON.parse(readFileSync(outputDir + '/items_textures.json', 'utf-8')).concat(JSON.parse(readFileSync(outputDir + '/blocks_textures.json', 'utf-8')));
+    const allTextures = allBlocksAndItems.map((item) => ({
+        name: item.name,
+        texture: item.texture === null ? null : 'data:image/png;base64,' + readFileSync(`${outputDir}/${item.texture.replace(/^minecraft:/, '')}.png`, 'base64'),
     }));
-    writeFileSync(outputDir + '/texture_content.json', JSON.stringify(arr, null, 2));
-}
-
-/**
- * Extracts all textures
- * @param {string} minecraftVersion the Minecraft version
- * @param {string} outputDir the path to the output directory
- * @param {string} temporaryDir the path to the temporary directory
- * @param {Function} callback the callback function
- */
-function extract(minecraftVersion, outputDir, temporaryDir, callback) {
-    getMinecraftFiles(minecraftVersion, temporaryDir, (err, unzippedFilesDir) => {
-        if (err) return callback(err);
-
-        mkdirpSync(outputDir);
-        getItems(unzippedFilesDir, outputDir + '/items_textures.json', itemMapping[minecraftVersion], minecraftVersion);
-        getBlocks(unzippedFilesDir, outputDir + '/blocks_textures.json', blockMapping[minecraftVersion], minecraftVersion);
-        getModels(unzippedFilesDir, outputDir + '/blocks_states.json', outputDir + '/blocks_models.json', blockMapping[minecraftVersion], minecraftVersion);
-        copyTextures(unzippedFilesDir, outputDir);
-        generateTextureContent(outputDir);
-        callback();
-    });
+    writeFileSync(outputDir + '/texture_content.json', JSON.stringify(allTextures, null, 2));
 }
