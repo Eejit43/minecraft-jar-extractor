@@ -1,8 +1,6 @@
-import fsExtra from 'fs-extra';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { getMinecraftFiles } from './util/get-minecraft-files.js';
-
-const { copySync, existsSync, mkdirpSync, readFileSync, writeFileSync } = fsExtra;
 
 if (process.argv.length < 3) {
     console.log('Must provide a version!');
@@ -17,11 +15,11 @@ versions.forEach(async (version) => {
 
     if (!existsSync(versionDataDir)) await getMinecraftFiles(version, resolve('version-data'));
 
-    mkdirpSync(outputDir);
+    mkdirSync(outputDir, { recursive: true });
     copyLang(versionDataDir, outputDir);
     parseLang(outputDir);
 
-    console.log(`Successfully extracted lang files for ${version} to ${outputDir}/${version}`);
+    console.log(`Successfully extracted lang files for ${version} to ${outputDir}`);
 });
 
 /**
@@ -31,12 +29,12 @@ versions.forEach(async (version) => {
  */
 function copyLang(unzippedFilesDir, outputDir) {
     try {
-        copySync(unzippedFilesDir + '/assets/minecraft/lang/en_US.lang', outputDir + '/en_us.lang');
+        copyFileSync(unzippedFilesDir + '/assets/minecraft/lang/en_US.lang', outputDir + '/en_us.lang');
     } catch (err) {
         try {
-            copySync(unzippedFilesDir + '/assets/minecraft/lang/en_us.lang', outputDir + '/en_us.lang');
+            copyFileSync(unzippedFilesDir + '/assets/minecraft/lang/en_us.lang', outputDir + '/en_us.lang');
         } catch (err) {
-            copySync(unzippedFilesDir + '/assets/minecraft/lang/en_us.json', outputDir + '/en_us.json');
+            copyFileSync(unzippedFilesDir + '/assets/minecraft/lang/en_us.json', outputDir + '/en_us.json');
         }
     }
 }
@@ -51,8 +49,8 @@ function parseLang(outputDir) {
     const lang = {};
     readFileSync(outputDir + '/en_us.lang', 'utf8')
         .split('\n')
-        .forEach((l) => {
-            const c = l.split(/=(.+)/);
+        .forEach((line) => {
+            const c = line.split(/=(.+)/);
             if (c.length === 3) lang[c[0]] = c[1];
         });
 
