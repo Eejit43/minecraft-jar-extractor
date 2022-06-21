@@ -70,8 +70,8 @@ function createAdvancements(outputDir) {
             if (advancement === 'empty' || advancement === 'sad_label' || advancement.startsWith('toast') || !advancement.endsWith('.title')) continue;
 
             advancements.push({
-                id: advancement.split('.')[1],
-                name: value,
+                name: advancement.split('.')[1],
+                displayName: value,
                 description: lang[`advancements.${advancement.split('.').slice(0, -1).join('.')}.description`] || null,
                 category: advancement.split('.')[0],
             });
