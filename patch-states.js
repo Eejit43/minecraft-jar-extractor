@@ -67,4 +67,6 @@ async function patchStates(version, outPath) {
     writeFileSync(blockFile, JSON.stringify(blocks, null, 2));
     rmSync(join('extracted-data', version), { recursive: true });
     if (readdirSync('extracted-data').length === 0) rmSync('extracted-data', { recursive: true });
+
+    console.log(`Successfully patched states for ${version} in ${blockFile}`);
 }

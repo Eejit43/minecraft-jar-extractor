@@ -18,6 +18,14 @@ $ node lang.js <version|version1,version2,...>
 
 ex: `node lang.js 1.18,1.19`
 
+## Advancements extractor
+
+```text
+$ node advancements.js <version|version1,version2,...>
+```
+
+ex: `node advancements.js 1.18,1.19`
+
 ## Protocol extractor
 
 ```text
