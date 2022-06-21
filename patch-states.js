@@ -1,24 +1,34 @@
-import { promises, writeFileSync } from 'fs';
+import { readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
-import { extractDataFromMC } from './extract-data-from-minecraft.js';
+import extractData from './util/extract-data-from-minecraft.js';
+
+if (process.argv.length < 3) {
+    console.log('Must provide a version and JSON file location!');
+    process.exit(1);
+} else if (process.argv.length < 4) {
+    console.log('Must provide a JSON file location!');
+    process.exit(1);
+}
+
+patchStates(process.argv[2], process.argv[3]);
 
 /**
  * Handles the patching of the block loot tables
  * @param {string} version the version to patch
  * @param {string} outPath the path to the output directory
  */
-async function handle(version, outPath) {
+async function patchStates(version, outPath) {
     const blockFile = resolve(outPath);
-    const blocks = await import(blockFile);
-    await extractDataFromMC(version);
-    const data = await import('./minecraft-extracted-data/minecraft-generated-blocks.json');
+    const blocks = JSON.parse(readFileSync(blockFile, 'utf-8'));
+    await extractData(version);
+    const extractedData = JSON.parse(readFileSync(resolve(`extracted-data/${version}/generated-blocks.json`), 'utf-8'));
 
-    if (!data) {
+    if (!extractedData) {
         console.log('No api for ' + version);
         return;
     }
     for (const block of blocks) {
-        const apiBlock = data['minecraft:' + block.name];
+        const apiBlock = extractedData['minecraft:' + block.name];
         if (!apiBlock) {
             console.log('Missing block in api: ' + block.name);
             continue;
@@ -36,9 +46,8 @@ async function handle(version, outPath) {
                     type,
                     num_values: values.length, // eslint-disable-line camelcase
                 };
-                if (type === 'enum') {
-                    state.values = values;
-                }
+                if (type === 'enum') state.values = values;
+
                 block.states.push(state);
             }
         }
@@ -52,16 +61,10 @@ async function handle(version, outPath) {
                 break;
             }
         }
-        block.drops = block.drops.filter((x) => x !== null);
+        block.drops = block.drops.filter((drop) => drop !== null);
     }
 
     writeFileSync(blockFile, JSON.stringify(blocks, null, 2));
-    await promises.rm(join('minecraft-extracted-data', 'minecraft-generated-blocks.json'));
+    rmSync(join('extracted-data', version), { recursive: true });
+    if (readdirSync('extracted-data').length === 0) rmSync('extracted-data', { recursive: true });
 }
-
-if (!process.argv[2] || !process.argv[3]) {
-    console.log('Usage: patch-states.js <version> <inFile>');
-    process.exit(1);
-}
-
-handle(process.argv[2], process.argv[3]);

@@ -10,3 +10,8 @@ images
 lang
 decompiled
 loot-tables
+blocks.json
+generated
+libraries
+logs
+extracted-data

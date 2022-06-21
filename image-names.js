@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import minecraftData from 'minecraft-data';
 import { resolve } from 'path';
-import { blockMapping, itemMapping } from './mapping.js';
+import { blockMapping, itemMapping } from './mappings.js';
 import { copyFolderRecursiveSync } from './util/functions.js';
 import { getMinecraftFiles } from './util/get-minecraft-files.js';
 
