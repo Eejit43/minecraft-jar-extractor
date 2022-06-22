@@ -87,11 +87,47 @@ function createAdvancements(outputDir, version) {
                     type: !advancementData.display.show_toast && !advancementData.display.announce_to_chat ? 'hidden' : advancementData.display.frame,
                     parent: advancementData.parent?.replace(/^minecraft:/, ''),
                     experience: advancementData.rewards?.experience,
-                    criteria: advancementData.criteria,
-                    requirements: advancementData.requirements?.map((requirement) => {
-                        if (requirement.length === 1) return requirement[0];
-                        else return requirement;
-                    }),
+                    criteria: Object.keys(advancementData.criteria).reduce((criteria, key) => {
+                        const condition = advancementData.criteria[key];
+                        criteria[key] = {
+                            trigger: condition.trigger,
+                            items:
+                                condition.conditions.items?.map((item) => {
+                                    if (item.items?.length === 1) return item.items[0];
+                                    else return item.items;
+                                }) ||
+                                condition.conditions.item?.items?.map((item) => {
+                                    if (item.length === 1) return item[0];
+                                    else return item;
+                                }) ||
+                                (condition.conditions.item?.tag ? `#${condition.conditions.item.tag}` : undefined) ||
+                                condition.conditions.damage?.type?.direct_entity?.type ||
+                                (condition.conditions.player?.[0].predicate?.equipment ? Object.values(condition.conditions.player[0].predicate.equipment).map((location) => location.items?.[0]) : undefined),
+                            block: condition.conditions.block || (condition.conditions.location?.block?.tag ? `#${condition.conditions.location.block.tag}` : undefined) || condition.conditions.player?.[0].predicate?.stepping_on?.block?.blocks?.[0],
+                            biome: condition.conditions.player?.[0]?.predicate?.location?.biome,
+                            structure: condition.conditions.player?.[0]?.predicate?.location?.structure,
+                            vehicle: condition.conditions.player?.[0]?.predicate?.vehicle?.type,
+                            entities:
+                                condition.conditions.entity?.map((entity) => entity.predicate.type) ||
+                                condition.conditions.child?.map((entity) => entity.predicate.type) ||
+                                condition.conditions.player?.[0]?.predicate?.type_specific?.looking_at?.type ||
+                                condition.conditions.victims?.map((entities) => {
+                                    if (entities.length === 1) return entities[0].predicate.type;
+                                    else return entities.map((entity) => entity.predicate.type);
+                                }) ||
+                                condition.conditions.bystander?.map((entity) => entity.predicate.type) ||
+                                condition.conditions.source?.[0]?.predicate?.type,
+                            effects: condition.conditions.effects ? Object.keys(condition.conditions.effects) : undefined,
+                            enchantments: condition.conditions.item?.enchantments,
+                            dimension: condition.conditions.to,
+                            position: condition.conditions.player?.[0]?.predicate?.location?.position,
+                            distance: condition.conditions.distance || condition.conditions.entity?.[0]?.predicate?.distance || condition.conditions.projectile?.[0]?.predicate?.distance,
+                            // Very specific information
+                            numBeesInside: condition.conditions.num_bees_inside,
+                            beaconLevel: condition.conditions.level,
+                        };
+                        return criteria;
+                    }, {}),
                 });
             });
         }
