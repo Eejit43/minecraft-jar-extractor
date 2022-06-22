@@ -1,5 +1,6 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
+import extractDataFolder from './util/extract-data-folder.js';
 import { getMinecraftFiles } from './util/get-minecraft-files.js';
 
 if (process.argv.length < 3) {
@@ -15,10 +16,13 @@ versions.forEach(async (version) => {
 
     if (!existsSync(versionDataDir)) await getMinecraftFiles(version, resolve('version-data'));
 
+    if (!existsSync(resolve(`data/${version}/loot_tables`))) await extractDataFolder(version);
+
     mkdirSync(outputDir, { recursive: true });
     copyLang(versionDataDir, outputDir);
     parseLang(outputDir);
-    createAdvancements(outputDir);
+
+    createAdvancements(outputDir, version);
 
     console.log(`Successfully extracted advancement file for ${version} to ${outputDir}`);
 });
@@ -59,25 +63,52 @@ function parseLang(outputDir) {
 /**
  * Parses the language file into an advancements file
  * @param {string} outputDir the path to the output directory
+ * @param {string} version the Minecraft version
  */
-function createAdvancements(outputDir) {
+function createAdvancements(outputDir, version) {
     const advancements = [];
     const lang = JSON.parse(readFileSync(outputDir + '/en_us.json', 'utf8'));
-    for (const key in lang) {
-        const value = lang[key];
-        if (key.startsWith('advancements.')) {
-            const advancement = key.split('.').slice(1).join('.');
-            if (advancement === 'empty' || advancement === 'sad_label' || advancement.startsWith('toast') || !advancement.endsWith('.title')) continue;
+    rmSync(outputDir + '/en_us.json');
 
-            advancements.push({
-                name: advancement.split('.')[1],
-                displayName: value,
-                description: lang[`advancements.${advancement.split('.').slice(0, -1).join('.')}.description`] || null,
-                category: advancement.split('.')[0],
+    readdirSync(resolve(`version-data/${version}/data/minecraft/advancements`)).forEach((category) => {
+        if (category !== 'recipes') {
+            readdirSync(resolve(`version-data/${version}/data/minecraft/advancements/${category}`)).forEach((advancement) => {
+                advancement = advancement.replace(/.json$/, '');
+
+                const advancementFile = resolve(`version-data/${version}/data/minecraft/advancements/${category}/${advancement}.json`);
+                const advancementData = JSON.parse(readFileSync(advancementFile, 'utf8'));
+
+                advancements.push({
+                    id: `${category}/${advancement}`,
+                    name: advancement,
+                    displayName: lang[advancementData.display.title.translate],
+                    description: lang[advancementData.display.description.translate],
+                    category,
+                    type: !advancementData.display.show_toast && !advancementData.display.announce_to_chat ? 'hidden' : advancementData.display.frame,
+                    parent: advancementData.parent?.replace(/^minecraft:/, ''),
+                    experience: advancementData.rewards?.experience,
+                });
             });
         }
-    }
-    writeFileSync(outputDir + '/advancements.json', JSON.stringify(advancements, null, 2));
+    });
 
-    rmSync(outputDir + '/en_us.json');
+    // const sortedAdvancements = [];
+    // const advancementMap = {};
+    // advancements.forEach((advancement) => {
+    //     advancementMap[advancement.id] = advancement;
+    // });
+    // while (advancements.length > 0) {
+    //     const advancement = advancements.shift();
+    //     if (advancement.parent) {
+    //         const parent = advancementMap[advancement.parent];
+    //         if (parent) {
+    //             if (!parent.children) parent.children = [];
+    //             parent.children.push(advancement);
+    //         }
+    //     } else {
+    //         sortedAdvancements.push(advancement);
+    //     }
+    // }
+
+    writeFileSync(outputDir + '/advancements.json', JSON.stringify(advancements, null, 2));
 }

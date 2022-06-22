@@ -22,7 +22,7 @@
         "extract-zip": "^2.0.1",
         "fernflower": "^1.1.0",
         "minecraft-data": "^3.4.0",
-        "minecraft-wrap": "^1.4.0"
+        "minecraft-wrap": "github:PrismarineJS/node-minecraft-wrap"
     },
     "devDependencies": {
         "eslint": "^8.17.0",
