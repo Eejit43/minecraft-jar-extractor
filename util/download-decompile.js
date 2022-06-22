@@ -1,8 +1,9 @@
-import fernflower from 'fernflower';
 import { existsSync, mkdirSync } from 'fs';
 import minecraftWrap from 'minecraft-wrap';
 import { resolve } from 'path';
 import { promisify } from 'util';
+import fernflower from './fernflower/fernflower.js';
+
 const downloadServer = promisify(minecraftWrap.downloadServer);
 
 /**

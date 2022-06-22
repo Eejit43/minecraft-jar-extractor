@@ -87,6 +87,11 @@ function createAdvancements(outputDir, version) {
                     type: !advancementData.display.show_toast && !advancementData.display.announce_to_chat ? 'hidden' : advancementData.display.frame,
                     parent: advancementData.parent?.replace(/^minecraft:/, ''),
                     experience: advancementData.rewards?.experience,
+                    criteria: advancementData.criteria,
+                    requirements: advancementData.requirements?.map((requirement) => {
+                        if (requirement.length === 1) return requirement[0];
+                        else return requirement;
+                    }),
                 });
             });
         }
