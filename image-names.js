@@ -16,7 +16,7 @@ versions.forEach(async (version) => {
     const outputDir = resolve(`images/${version}`);
     const versionDataDir = resolve(`version-data/${version}`);
 
-    if (!existsSync(versionDataDir)) await getMinecraftFiles(version, resolve('version-data'));
+    if (!existsSync(versionDataDir)) await getMinecraftFiles(version);
 
     mkdirSync(outputDir, { recursive: true });
 
@@ -41,7 +41,7 @@ function extractBlockState(name, path, full = false) {
     else {
         try {
             name = name.replace(/minecraft:/, '');
-            const t = JSON.parse(readFileSync(path + name + '.json', 'utf8'));
+            const t = JSON.parse(readFileSync(path + name + '.json', 'utf-8'));
             if (full) return t;
             const firstVariant = t.variants[Object.keys(t.variants)[0]];
             return firstVariant.model || firstVariant[0].model;
@@ -63,7 +63,7 @@ function extractModel(name, path, full = false) {
     else {
         try {
             name = name.replace(/^(?:block\/)?minecraft:/, '');
-            const t = JSON.parse(readFileSync(path + name + '.json', 'utf8'));
+            const t = JSON.parse(readFileSync(path + name + '.json', 'utf-8'));
             if (full) return t;
             if (t.textures) return t.textures[Object.keys(t.textures)[0]];
 

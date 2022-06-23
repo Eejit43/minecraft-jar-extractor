@@ -14,7 +14,7 @@ versions.forEach(async (version) => {
     const outputDir = resolve(`advancements/${version}`);
     const versionDataDir = resolve(`version-data/${version}`);
 
-    if (!existsSync(versionDataDir)) await getMinecraftFiles(version, resolve('version-data'));
+    if (!existsSync(versionDataDir)) await getMinecraftFiles(version);
 
     if (!existsSync(resolve(`data/${version}/loot_tables`))) await extractDataFolder(version);
 
@@ -51,7 +51,7 @@ function copyLang(unzippedFilesDir, outputDir) {
 function parseLang(outputDir) {
     if (existsSync(outputDir + '/en_us.json')) return;
     const lang = {};
-    readFileSync(outputDir + '/en_us.lang', 'utf8')
+    readFileSync(outputDir + '/en_us.lang', 'utf-8')
         .split('\n')
         .forEach((line) => {
             const c = line.split(/=(.+)/);
@@ -67,7 +67,7 @@ function parseLang(outputDir) {
  */
 function createAdvancements(outputDir, version) {
     const advancements = [];
-    const lang = JSON.parse(readFileSync(outputDir + '/en_us.json', 'utf8'));
+    const lang = JSON.parse(readFileSync(outputDir + '/en_us.json', 'utf-8'));
     rmSync(outputDir + '/en_us.json');
 
     readdirSync(resolve(`version-data/${version}/data/minecraft/advancements`)).forEach((category) => {
@@ -76,7 +76,7 @@ function createAdvancements(outputDir, version) {
                 advancement = advancement.replace(/.json$/, '');
 
                 const advancementFile = resolve(`version-data/${version}/data/minecraft/advancements/${category}/${advancement}.json`);
-                const advancementData = JSON.parse(readFileSync(advancementFile, 'utf8'));
+                const advancementData = JSON.parse(readFileSync(advancementFile, 'utf-8'));
 
                 advancements.push({
                     id: `${category}/${advancement}`,

@@ -1,23 +1,45 @@
-import extract from 'extract-zip';
+import extractZip from 'extract-zip';
 import { mkdirSync } from 'fs';
 import minecraftWrap from 'minecraft-wrap';
+import path, { resolve } from 'path';
 
-const { downloadClient } = minecraftWrap;
+const { downloadClient, downloadServer } = minecraftWrap;
 
 /**
- * Downloads minecraft files
- * @param {number} minecraftVersion the version of minecraft to download
- * @param {string} versionDataDir the directory to download to
+ * Downloads the Minecraft client and extracts it
+ * @param {string} version the version of Minecraft to download
  */
-export function getMinecraftFiles(minecraftVersion, versionDataDir) {
-    const jarPath = `${versionDataDir}/${minecraftVersion}.jar`;
-    const unzippedFilesDir = `${versionDataDir}/${minecraftVersion}`;
+export function getMinecraftFiles(version) {
+    const jarPath = resolve(`version-data/${version}.jar`);
+    const unzippedFilesDir = resolve(`version-data/${version}`);
     mkdirSync(unzippedFilesDir, { recursive: true });
     return new Promise((resolve) => {
-        downloadClient(minecraftVersion, jarPath, async (err) => {
+        downloadClient(version, jarPath, async (err) => {
             if (err) throw err;
 
-            await extract(jarPath, { dir: unzippedFilesDir });
+            await extractZip(jarPath, { dir: unzippedFilesDir });
+
+            console.log(`Successfully downloaded client files for ${version} to ${path.resolve(`${unzippedFilesDir}/${version}`)}`);
+            return resolve();
+        });
+    });
+}
+
+/**
+ * Downloads the Minecraft server and extracts it
+ * @param {string} version the version of Minecraft to download
+ */
+export function getMinecraftServerFiles(version) {
+    const jarPath = resolve(`server-data/${version}.jar`);
+    const unzippedFilesDir = resolve(`server-data/${version}`);
+    mkdirSync(unzippedFilesDir, { recursive: true });
+    return new Promise((resolve) => {
+        downloadServer(version, jarPath, async (err) => {
+            if (err) throw err;
+
+            await extractZip(jarPath, { dir: unzippedFilesDir });
+
+            console.log(`Successfully downloaded server files for ${version} to ${path.resolve(`${unzippedFilesDir}/${version}`)}`);
             return resolve();
         });
     });

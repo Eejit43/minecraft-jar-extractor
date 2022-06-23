@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
-import downloadDecompile from './util/download-decompile.js';
+import { fernflower } from './util/fernflower/fernflower.js';
+import { getMinecraftServerFiles } from './util/get-minecraft-files.js';
 
 if (process.argv.length < 3) {
     console.log('Must provide a version!');
@@ -10,9 +11,20 @@ if (process.argv.length < 3) {
 const versions = process.argv[2].split(',');
 
 versions.forEach(async (version) => {
-    const decompiledFilesDir = resolve(`./decompiled/${version}/decompiled`);
+    const decompiledFilesDir = resolve(`decompiled/${version}`);
 
-    if (!existsSync(decompiledFilesDir)) await downloadDecompile(version);
+    if (!existsSync(decompiledFilesDir + '/decompiled')) {
+        const jarPath = resolve(`server-data/${version}.jar`);
+        const dataFilesDir = resolve(`server-data/${version}`);
+
+        if (!existsSync(jarPath) || !existsSync(dataFilesDir)) await getMinecraftServerFiles(version);
+
+        mkdirSync(decompiledFilesDir, { recursive: true });
+
+        await fernflower(dataFilesDir, decompiledFilesDir, true);
+
+        console.log(`Successfully decompiled server files for ${version} to ${decompiledFilesDir}`);
+    }
 
     const data = readFileSync(`${decompiledFilesDir}/el.java`, 'utf-8');
     const clean = dataToCleanLines(data, version);
@@ -118,7 +130,7 @@ const states = {
  */
 function getFields(className, version) {
     if (className.indexOf('.') !== -1) return ['error'];
-    const data = readFileSync(`decompiled/${version}/decompiled/${className}.java`, 'utf8');
+    const data = readFileSync(`decompiled/${version}/decompiled/${className}.java`, 'utf-8');
     return processPacketDefinition(data);
 }
 

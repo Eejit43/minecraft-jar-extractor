@@ -13,7 +13,7 @@ versions.forEach(async (version) => {
     const outputDir = resolve(`lang/${version}`);
     const versionDataDir = resolve(`version-data/${version}`);
 
-    if (!existsSync(versionDataDir)) await getMinecraftFiles(version, resolve('version-data'));
+    if (!existsSync(versionDataDir)) await getMinecraftFiles(version);
 
     mkdirSync(outputDir, { recursive: true });
     copyLang(versionDataDir, outputDir);
@@ -47,7 +47,7 @@ function parseLang(outputDir) {
     if (existsSync(outputDir + '/en_us.json')) return;
 
     const lang = {};
-    readFileSync(outputDir + '/en_us.lang', 'utf8')
+    readFileSync(outputDir + '/en_us.lang', 'utf-8')
         .split('\n')
         .forEach((line) => {
             const c = line.split(/=(.+)/);

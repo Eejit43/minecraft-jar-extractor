@@ -9,12 +9,11 @@ import { getMinecraftFiles } from './get-minecraft-files.js';
  */
 export default async function (minecraftVersion) {
     const outputDir = resolve('data');
-    const versionDataDir = resolve('version-data');
 
-    await getMinecraftFiles(minecraftVersion, versionDataDir);
+    await getMinecraftFiles(minecraftVersion);
 
     if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
-    copyFolderRecursiveSync(join(versionDataDir, minecraftVersion, 'data', 'minecraft'), outputDir);
+    copyFolderRecursiveSync(join(resolve('version-data'), minecraftVersion, 'data', 'minecraft'), outputDir);
     renameSync(join(outputDir, 'minecraft'), join(outputDir, minecraftVersion));
 
     return console.log(`Extracted data folder for ${minecraftVersion} to ${outputDir}/${minecraftVersion}`);
