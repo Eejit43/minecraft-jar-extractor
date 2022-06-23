@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
-import extractData from './util/extract-data-from-minecraft.js';
+import { extractData } from './util/extract-data-from-minecraft.js';
 
 if (process.argv.length < 3) {
     console.log('Must provide a version and JSON file location!');

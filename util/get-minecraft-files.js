@@ -1,7 +1,7 @@
 import extractZip from 'extract-zip';
 import { mkdirSync } from 'fs';
 import minecraftWrap from 'minecraft-wrap';
-import path, { resolve } from 'path';
+import { resolve } from 'path';
 
 const { downloadClient, downloadServer } = minecraftWrap;
 
@@ -19,7 +19,7 @@ export function getMinecraftFiles(version) {
 
             await extractZip(jarPath, { dir: unzippedFilesDir });
 
-            console.log(`Successfully downloaded client files for ${version} to ${path.resolve(`${unzippedFilesDir}/${version}`)}`);
+            console.log(`Successfully downloaded client files for ${version} to ${unzippedFilesDir}`);
             return resolve();
         });
     });
@@ -39,7 +39,7 @@ export function getMinecraftServerFiles(version) {
 
             await extractZip(jarPath, { dir: unzippedFilesDir });
 
-            console.log(`Successfully downloaded server files for ${version} to ${path.resolve(`${unzippedFilesDir}/${version}`)}`);
+            console.log(`Successfully downloaded server files for ${version} to ${unzippedFilesDir}`);
             return resolve();
         });
     });

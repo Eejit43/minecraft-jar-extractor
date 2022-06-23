@@ -5,16 +5,25 @@ import { getMinecraftFiles } from './get-minecraft-files.js';
 
 /**
  * Extracts the data folder for a given version
- * @param {string} minecraftVersion the Minecraft version
+ * @param {string} version the Minecraft version
  */
-export default async function (minecraftVersion) {
+export default async function (version) {
     const outputDir = resolve('data');
+    const versionDataDir = resolve(`version-data/${version}`);
 
-    await getMinecraftFiles(minecraftVersion);
+    if (!existsSync(versionDataDir)) await getMinecraftFiles(version);
 
     if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
-    copyFolderRecursiveSync(join(resolve('version-data'), minecraftVersion, 'data', 'minecraft'), outputDir);
-    renameSync(join(outputDir, 'minecraft'), join(outputDir, minecraftVersion));
 
-    return console.log(`Extracted data folder for ${minecraftVersion} to ${outputDir}/${minecraftVersion}`);
+    if (!isNaN(Number(version)) && Number(version) >= 1.13) {
+        copyFolderRecursiveSync(join(versionDataDir, 'data', 'minecraft'), outputDir);
+        renameSync(join(outputDir, 'minecraft'), join(outputDir, version));
+    } else if (!isNaN(Number(version)) && Number(version) < 1.13) {
+        copyFolderRecursiveSync(join(versionDataDir, 'assets', 'minecraft', 'advancements'), join(outputDir, version));
+        copyFolderRecursiveSync(join(versionDataDir, 'assets', 'minecraft', 'loot_tables'), join(outputDir, version));
+        copyFolderRecursiveSync(join(versionDataDir, 'assets', 'minecraft', 'recipes'), join(outputDir, version));
+        copyFolderRecursiveSync(join(versionDataDir, 'assets', 'minecraft', 'structures'), join(outputDir, version));
+    }
+
+    return console.log(`Successfully extracted data folder for ${version} to ${outputDir}/${version}`);
 }
