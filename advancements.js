@@ -26,7 +26,7 @@ versions.map(async (version) => {
 
     createAdvancements(outputDir, version);
 
-    console.log(chalk.green(`Successfully extracted advancements file for ${version} to ${outputDir}`));
+    console.log(chalk.green(`Successfully extracted advancements file for ${version} to ${outputDir}/advancements.json`));
 });
 
 /**
@@ -102,7 +102,7 @@ function createAdvancements(outputDir, version) {
                                 (conditions.entity?.type ? [conditions.entity.type] : undefined) || //
                                 (conditions.entity && conditions.entity instanceof Array && (conditions.entity?.[0]?.predicate?.type || conditions.entity?.[0]?.predicate?.type_specific) ? conditions.entity.map((entity) => entity.predicate.type || (entity.predicate.type_specific ? `#${entity.predicate.type_specific.variant}` : undefined) || null) : undefined) ||
                                 conditions.child?.map((entity) => entity.predicate.type) ||
-                                conditions.parent?.type ||
+                                (conditions.parent?.type ? [conditions.parent.type] : undefined) ||
                                 conditions.parent?.map((entity) => entity.predicate.type) ||
                                 (conditions.player?.[0]?.predicate?.type_specific?.looking_at?.type ? [conditions.player[0].predicate.type_specific.looking_at.type] : undefined) ||
                                 (conditions.victims && conditions.victims.length > 0 ? conditions.victims?.map((entities) => entities[0]?.predicate?.type || entities.type) : undefined) ||
@@ -174,6 +174,9 @@ function createAdvancements(outputDir, version) {
                                 }
                             }
                         }
+                        if (criteria[key].items && !(criteria[key].items instanceof Array)) console.log(chalk.yellow(`Warning: ${version}'s output items value is not an array in "${key}" (from ${advancementFile})!`));
+                        if (criteria[key].blocks && !(criteria[key].blocks instanceof Array)) console.log(chalk.yellow(`Warning: ${version}'s output blocks value is not an array in "${key}" (from ${advancementFile})!`));
+                        if (criteria[key].entities && !(criteria[key].entities instanceof Array)) console.log(chalk.yellow(`Warning: ${version}'s output entities value is not an array in "${key}" (from ${advancementFile})!`));
                         return criteria;
                     }, {}),
                 });
