@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { execSync } from 'child_process';
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import minecraftData from 'minecraft-data';
@@ -24,10 +25,10 @@ export async function extractData(version) {
     const output = execSync(`${cliStartCommand} --output ${outputDirectory} --reports`).toString();
 
     if (!output.includes('All providers took:')) {
-        console.log('Server dumping failed, check output:');
+        console.log(chalk.red('Server dumping failed, check output:'));
         console.log(output);
     } else {
-        console.log(`Successfully dumped server files for ${version} to ${outputDirectory}`);
+        console.log(chalk.blue(`Successfully dumped server files for ${version} to ${outputDirectory}`));
     }
 
     rmSync(join(outputDirectory, '.cache'), { recursive: true, force: true });

@@ -18,6 +18,7 @@
     "homepage": "https://github.com/Eejit43/minecraft-jar-extractor#readme",
     "dependencies": {
         "async": "^3.2.4",
+        "chalk": "^5.0.1",
         "deep-equal": "^2.0.5",
         "extract-zip": "^2.0.1",
         "minecraft-data": "^3.5.0",

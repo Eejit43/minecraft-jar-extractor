@@ -1,8 +1,32 @@
+import chalk from 'chalk';
 import deepEqual from 'deep-equal';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import extractDataFolder from './util/extract-data-folder.js';
 import { getPotentialDrops } from './util/prismarine-loottable.js'; // cSpell:disable-line
+
+if (process.argv.length < 3) {
+    console.log(chalk.red('Must provide a version!'));
+    process.exit(1);
+}
+
+const versions = process.argv[2].split(',');
+const dataFolder = resolve('data');
+const mcDataFolder = resolve('loot-tables');
+
+versions.forEach(async (version) => {
+    const rawPath = resolve(`${dataFolder}/${version}/loot_tables`);
+
+    if (!existsSync(rawPath)) await extractDataFolder(version);
+    const dataPath = resolve(`${mcDataFolder}/${version}`);
+    mkdirSync(dataPath, { recursive: true });
+
+    let entryCount = 0;
+    entryCount += generate(join(rawPath, 'blocks'), join(dataPath, 'blockLoot.json'), extractBlockTable);
+    entryCount += generate(join(rawPath, 'entities'), join(dataPath, 'entityLoot.json'), extractEntityTable);
+
+    console.log(chalk.green(`Successfully generated loot tables for ${version} to ${dataPath} (${entryCount} entries processed)!`));
+});
 
 /**
  * Removes the `minecraft` namespace from a string
@@ -107,34 +131,3 @@ function generate(inputDir, outputFile, handlerFunction) {
     writeFileSync(outputFile, JSON.stringify(lootData, null, 2));
     return lootFiles.length;
 }
-
-/**
- * Handles the loot generation
- * @param {string} dataFolder the folder with loot tables
- * @param {string} mcDataFolder the folder with mc data
- * @param {string} version the Minecraft version
- */
-async function handle(dataFolder, mcDataFolder, version) {
-    const rawPath = resolve(`${dataFolder}/${version}/loot_tables`);
-
-    if (!existsSync(rawPath)) await extractDataFolder(version);
-    const dataPath = resolve(`${mcDataFolder}/${version}`);
-    mkdirSync(dataPath, { recursive: true });
-
-    let entryCount = 0;
-    entryCount += generate(join(rawPath, 'blocks'), join(dataPath, 'blockLoot.json'), extractBlockTable);
-    entryCount += generate(join(rawPath, 'entities'), join(dataPath, 'entityLoot.json'), extractEntityTable);
-
-    console.log(`Version ${version} finished (${entryCount} entries processed)`);
-}
-
-if (process.argv.length < 3) {
-    console.log('Must provide a version!');
-    process.exit(1);
-}
-
-const versions = process.argv[2].split(',');
-const dataFolder = resolve('data');
-const mcDataFolder = resolve('loot-tables');
-
-for (const version of versions) handle(dataFolder, mcDataFolder, version);

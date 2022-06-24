@@ -1,12 +1,13 @@
-import { readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { join, resolve } from 'path';
+import chalk from 'chalk';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
 import { extractData } from './util/extract-data-from-minecraft.js';
 
 if (process.argv.length < 3) {
-    console.log('Must provide a version and JSON file location!');
+    console.log(chalk.red('Must provide a version and JSON file location!'));
     process.exit(1);
 } else if (process.argv.length < 4) {
-    console.log('Must provide a JSON file location!');
+    console.log(chalk.red('Must provide a JSON file location!'));
     process.exit(1);
 }
 
@@ -20,17 +21,16 @@ patchStates(process.argv[2], process.argv[3]);
 async function patchStates(version, outPath) {
     const blockFile = resolve(outPath);
     const blocks = JSON.parse(readFileSync(blockFile, 'utf-8'));
-    await extractData(version);
-    const extractedData = JSON.parse(readFileSync(resolve(`extracted-data/${version}/generated-blocks.json`), 'utf-8'));
+    const extractedDataDir = resolve(`extracted-data/${version}/reports/blocks.json`);
 
-    if (!extractedData) {
-        console.log('No api for ' + version);
-        return;
-    }
+    if (!existsSync(extractedDataDir)) await extractData(version);
+
+    const extractedData = JSON.parse(readFileSync(extractedDataDir, 'utf-8'));
+
     for (const block of blocks) {
         const apiBlock = extractedData['minecraft:' + block.name];
         if (!apiBlock) {
-            console.log('Missing block in api: ' + block.name);
+            console.log(chalk.yellow(`Missing block in extracted data: ${block.name}`));
             continue;
         }
 
@@ -65,8 +65,6 @@ async function patchStates(version, outPath) {
     }
 
     writeFileSync(blockFile, JSON.stringify(blocks, null, 2));
-    rmSync(join('extracted-data', version), { recursive: true });
-    if (readdirSync('extracted-data').length === 0) rmSync('extracted-data', { recursive: true });
 
-    console.log(`Successfully patched states for ${version} in ${blockFile}`);
+    console.log(chalk.green(`Successfully patched states for ${version} in ${blockFile}`));
 }

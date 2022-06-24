@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { existsSync, mkdirSync, renameSync } from 'fs';
 import { join, resolve } from 'path';
 import { copyFolderRecursiveSync } from './functions.js';
@@ -25,5 +26,5 @@ export default async function (version) {
         copyFolderRecursiveSync(join(versionDataDir, 'assets', 'minecraft', 'structures'), join(outputDir, version));
     }
 
-    return console.log(`Successfully extracted data folder for ${version} to ${outputDir}/${version}`);
+    return console.log(chalk.blue(`Successfully extracted data folder for ${version} to ${outputDir}/${version}`));
 }

@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import extractZip from 'extract-zip';
 import { mkdirSync } from 'fs';
 import minecraftWrap from 'minecraft-wrap';
@@ -19,7 +20,7 @@ export function getMinecraftFiles(version) {
 
             await extractZip(jarPath, { dir: unzippedFilesDir });
 
-            console.log(`Successfully downloaded client files for ${version} to ${unzippedFilesDir}`);
+            console.log(chalk.blue(`Successfully downloaded client files for ${version} to ${unzippedFilesDir}`));
             return resolve();
         });
     });
@@ -39,7 +40,7 @@ export function getMinecraftServerFiles(version) {
 
             await extractZip(jarPath, { dir: unzippedFilesDir });
 
-            console.log(`Successfully downloaded server files for ${version} to ${unzippedFilesDir}`);
+            console.log(chalk.blue(`Successfully downloaded server files for ${version} to ${unzippedFilesDir}`));
             return resolve();
         });
     });

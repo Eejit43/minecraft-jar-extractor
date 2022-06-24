@@ -1,10 +1,11 @@
+import chalk from 'chalk';
 import { existsSync, mkdirSync } from 'fs';
 import { resolve } from 'path';
 import { getMinecraftFiles } from './util/get-minecraft-files.js';
 import { copyLang, parseLang } from './util/lang.js';
 
 if (process.argv.length < 3) {
-    console.log('Must provide a version!');
+    console.log(chalk.red('Must provide a version!'));
     process.exit(1);
 }
 
@@ -21,5 +22,5 @@ versions.forEach(async (version) => {
     copyLang(versionDataDir, outputDir);
     parseLang(outputDir);
 
-    console.log(`Successfully extracted lang file for ${version} to ${outputDir}`);
+    console.log(chalk.green(`Successfully extracted lang file for ${version} to ${outputDir}`));
 });

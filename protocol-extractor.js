@@ -1,10 +1,11 @@
+import chalk from 'chalk';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { fernflower } from './util/fernflower/fernflower.js';
 import { getMinecraftServerFiles } from './util/get-minecraft-files.js';
 
 if (process.argv.length < 3) {
-    console.log('Must provide a version!');
+    console.log(chalk.red('Must provide a version!'));
     process.exit(1);
 }
 
@@ -23,7 +24,7 @@ versions.forEach(async (version) => {
 
         await fernflower(dataFilesDir, decompiledFilesDir, true);
 
-        console.log(`Successfully decompiled server files for ${version} to ${decompiledFilesDir}`);
+        console.log(chalk.blue(`Successfully decompiled server files for ${version} to ${decompiledFilesDir}`));
     }
 
     const data = readFileSync(`${decompiledFilesDir}/el.java`, 'utf-8');
@@ -33,7 +34,7 @@ versions.forEach(async (version) => {
     mkdirSync(`protocol/${version}`, { recursive: true });
     writeFileSync(`protocol/${version}/protocol.json`, JSON.stringify(reorder(['handshaking', 'status', 'login', 'play'], protocol), null, 2));
 
-    console.log(`Successfully extracted protocol for ${version} to ${resolve(`protocol/${version}/protocol.json`)}`);
+    console.log(chalk.green(`Successfully extracted protocol for ${version} to ${resolve(`protocol/${version}/protocol.json`)}`));
 });
 
 /**

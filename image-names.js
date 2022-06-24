@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import minecraftData from 'minecraft-data';
 import { resolve } from 'path';
@@ -6,7 +7,7 @@ import { copyFolderRecursiveSync } from './util/functions.js';
 import { getMinecraftFiles } from './util/get-minecraft-files.js';
 
 if (process.argv.length < 3) {
-    console.log('Must provide a version!');
+    console.log(chalk.red('Must provide a version!'));
     process.exit(1);
 }
 
@@ -26,7 +27,7 @@ versions.forEach(async (version) => {
     copyTextures(versionDataDir, outputDir);
     generateTextureContent(outputDir);
 
-    console.log(`Successfully generated images for ${version} to ${outputDir}`);
+    console.log(chalk.green(`Successfully generated images for ${version} to ${outputDir}`));
 });
 
 /**
