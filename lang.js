@@ -22,5 +22,5 @@ versions.forEach(async (version) => {
     copyLang(versionDataDir, outputDir);
     parseLang(outputDir);
 
-    console.log(chalk.green(`Successfully extracted lang file for ${version} to ${outputDir}`));
+    console.log(chalk.green(`Successfully extracted lang file for ${version} to ${outputDir}/en_us.json`));
 });
