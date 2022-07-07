@@ -26,13 +26,13 @@ $ node advancements.js <version|version1,version2,...>
 
 ex: `node advancements.js 1.18,1.19`
 
-## Protocol extractor
+<!-- ## Protocol extractor
 
 ```text
 $ node protocol-extractor.js <version|version1,version2,...>
 ```
 
-ex: `$ node protocol-extractor.js 1.18,1.19`
+ex: `$ node protocol-extractor.js 1.18,1.19` -->
 
 ## Block loot table extractor
 
